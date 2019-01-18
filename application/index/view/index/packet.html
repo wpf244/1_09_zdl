@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<title>红包详情</title>
+<link rel="stylesheet" type="text/css" href="/static/home/css/chat.css" />
+<script src="/static/home/js/jquery.min.js"></script>
+</head>
+
+<body>
+
+<section class="webkit_box">
+  <div class="top_box red">
+    <a class="top_back" href="{:url('Index/index')}">&lt;</a>
+    <div class="top_txt">红包详情</div>
+  </div>
+  <section class="webkit_content">
+    <div class="hongbao_detail">
+      <div class="hongbao_box">
+        <img class="hongbao_thumb" src="{$chatlog.fromavatar}" />
+        <div class="hongbao_nickname">{$chatlog.fromname}</div>
+        <p class="hongbao_tips">恭喜发财，大吉大利！</p>
+       {notempty name="rep"} 
+        <div class="hongbao_sum">
+          <span class="hongbao_jine">{$rep.money}</span>
+          <span class="hongbao_cell">元</span>
+        </div>
+        <a class="hongbao_where" href="#">已存入余额</a>
+        {/notempty}
+      </div>
+      
+      <div class="hongbao_record">
+        <p class="hongbao_status">{$cou}/{$chatlog.number}红包共{$chatlog.money}元，</p>
+        <ul class="hongbao_list">
+         {volist name="res" id="v"}
+          <li class="hongbao_item">
+            <div class="hongbao_infor">
+              <img class="hongbao_person" src="{$v.avatar}"/>
+              <div class="hongbao_ren">
+                <div class="hongbao_who">{$v.nickname}</div>
+                <p class="hongbao_time">
+                  {$v.time|date="m-d H:i",###}
+                </p>
+              </div>
+            </div>
+            <div class="hongbao_qian">
+              <p class="hongbao_money">{$v.money}元</p>
+            </div>
+          </li>
+         {/volist}
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+</section>
+
+</body>
+
+</html>

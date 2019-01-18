@@ -10,3 +10,9 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
+function alerts($info,$url){
+    echo '<script>
+          alert("'.$info.'");
+          location.href="'.$url.'";
+          </script>';
+}
