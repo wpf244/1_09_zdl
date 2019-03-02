@@ -22,4 +22,13 @@ class Plan extends Controller{
             }
         }
     }
+
+    function chan(){
+        $data['uniacid']=5;
+        // $res=db('ims_ewei_shop_member')->where("uniacid=2")->update($data);
+        // $res1=db('ims_mc_members')->where("uniacid=2")->update($data);
+        // $res=db('ims_ewei_shop_member_level')->where('uniacid=2')->update($data);
+        // $res=db('ims_mc_mapping_fans')->where('uniacid=2')->update($data);
+        dump($res);
+    }
 }

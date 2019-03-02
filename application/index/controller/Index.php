@@ -9,22 +9,25 @@ class Index extends Controller
     public function _initialize()
     {
         $uid=input('uid');
-      // $uid=3;
+        $uniacid=input('uniacid');
         if(empty($uid)){
            if(empty(session('uid'))){
-               $this->redirect('http://zdl.dd371.com/app/index.php?i=2&c=entry&m=ewei_shopv2&do=mobile&r=member');
+               $this->redirect('http://zdl.dd371.com/app/index.php?i='.$uniacid.'&c=entry&m=ewei_shopv2&do=mobile&r=member');
            }
         }else{
             session("uid",$uid);
         }
     }
-    public function index()
+    public function lister()
     {
         $uid=session("uid");
+        // dump($uid);die;
         $user=db("ims_snake_chatuser")->where("uid=$uid")->find();
         $more=input("more");
+        $groupid=input('groupid');
+        $group=db('ims_snake_chatgroup')->where("id=$groupid")->find();
         if($user){
-            $groupid=$user['groupid'];
+            // $groupid=$user['groupid'];
             $count=db("ims_snake_chatuser")->where("groupid=$groupid")->count();
             if($count >= 500){
                 $del=db("ims_snake_chatuser")->where("groupid=$groupid")->order("id asc")->limit(1)->find();
@@ -61,19 +64,45 @@ class Index extends Controller
             }
             $last_names = array_column($res,'id');
             array_multisort($last_names,SORT_ASC,$res);
+            $this->assign('group',$group);
             $this->assign("res",$res);
             $this->assign("uid",$uid);
             $this->assign("user",json_encode($user));
     
             $cou=db("ims_snake_chatuser")->where("groupid=$groupid")->count();
             $this->assign("cou",$cou);
+
+            $this->assign("groupid",$groupid);
     
             return $this->fetch();
-        }else{
-            alerts("还没有加入群聊","http://zdl.dd371.com/app/index.php?i=2&c=entry&m=ewei_shopv2&do=mobile&r=member");
-         //   $this->redirect('http://zdl.dd371.com/app/index.php?i=2&c=entry&m=ewei_shopv2&do=mobile&r=member');
         }
-       
+        else{
+            alerts("还没有加入群聊","http://zdl.dd371.com/app/index.php?i=".$uniacid."&c=entry&m=ewei_shopv2&do=mobile&r=member");
+        }
+    
+    }
+    public function index(){
+        $uid=session('uid');
+        // $uid=123;
+
+        
+        $group=db('ims_snake_chatuser')->where("uid=$uid")->select();
+        foreach($group as &$v){
+            $gid=$v['groupid'];
+            $groupname=db('ims_snake_chatgroup')->where("id=$gid")->find();
+            $v['groupname']=$groupname['groupname'];
+            $v['gid']=$groupname['id'];
+            $v['time']=date('Y-m-d H:i:s',$v['time']);
+
+            $re=db("ims_snake_chatlog")->where("!FIND_IN_SET($uid,uids)")->where("group_id",$gid)->select();
+            if($re){
+                $v['hong']=1;
+            }else{
+                $v['hong']=0;
+            }
+        }
+        $this->assign('list',$group);
+        return $this->fetch();
     }
     public function getinfo()
     {
@@ -93,7 +122,7 @@ class Index extends Controller
         $data['fromid']=$uid;
         $data['fromname']=$user['nickname'];
         $data['fromavatar']=$user['avatar'];
-        $data['group_id']=$user['groupid'];
+        $data['group_id']=input('groupid');
         $data['timeline']=time();
         $arr[]=$uid;
         $atr=\implode(",",$arr);
@@ -135,8 +164,8 @@ class Index extends Controller
         $user=db("ims_snake_chatuser")->where("uid=$uid")->find();
         if($re){
             if($re['status'] == 0){
-               $packet=db("ims_snake_packet")->where("log_id=$id")->find();
-               if($packet){
+                $packet=db("ims_snake_packet")->where("log_id=$id")->find();
+                if($packet){
                     $rep=db("ims_snake_packet")->where("log_id=$id and uid=$uid")->find();
                     if($rep){
                         $uids=$re['packet'];
@@ -166,14 +195,20 @@ class Index extends Controller
                                 db("ims_snake_chatlog")->where("id=$id")->update(['packet'=>$str]);                    
                             }
                             //用户增加余额
-                            db("ims_ewei_shop_member")->where("uid=$uid")->setInc("credit2",$rea['money']);
+                            $member=db("ims_ewei_shop_member")->where("id=$uid")->find();
+                            if($member['uid']==0){
+                                db("ims_ewei_shop_member")->where("id=$uid")->setInc("credit2",$rea['money']);
+                            }else{
+                                $member_id=$member['uid'];
+                                db('ims_mc_members')->where('uid',$member_id)->setInc("credit2",$rea['money']);
+                            }
 
                             $this->redirect("packet",array('id'=>$id));
                         }else{
                             $this->redirect("packet",array('id'=>$id)); 
                         }
                     }
-               }else{                    
+                }else{                    
                     
                     $money = $re['money'];
                     $num = $re['number'];
@@ -189,8 +224,16 @@ class Index extends Controller
                             $data['money']=$v;
                             $data['time']=time();
                             $data['status']=1;
+
                             //用户增加余额
-                            db("ims_ewei_shop_member")->where("uid=$uid")->setInc("credit2",$v);
+                            $member=db("ims_ewei_shop_member")->where("id=$uid")->find();
+                            if($member['uid']==0){
+                                db("ims_ewei_shop_member")->where("id=$uid")->setInc("credit2",$v);
+                            }else{
+                                $member_id=$member['uid'];
+                                db('ims_mc_members')->where('uid',$member_id)->setInc("credit2",$v);
+                            }
+                            
                         }else{
                             $data['money']=$v;
                         }
@@ -246,22 +289,37 @@ class Index extends Controller
         }
         
     }
+    // public function open_reds()
+    // {
+    //     $re=$this->open_red("0.3",1);
+    //     var_dump($re);
+    // }
     public function open_red($total, $num) {
-        $min=0.01;//每个人最少能收到0.01元
+        $min=0.01;//每个人最少能收到0.5元
         $sub_arr = [];
+
+        $mins=0.5;
+      
         for ($i=1;$i<$num;$i++)
         {
             $safe_total=($total-($num-$i)*$min)/($num-$i);//随机安全上限
+        //   var_dump($safe_total);exit;
             $money=mt_rand($min*100,$safe_total*100)/100;
+            while ($money < $mins){
+                $money=mt_rand($min*100,$safe_total*100)/100;
+            }
             $total=$total-$money;
             //echo '第'.$i.'个红包：领'.$money.' 元，余额：'.$total.' 元 <br/>';
             $sub_arr[] = $money;
         }
         //echo '00第'.$num.'个红包：'.$total.' 元，余额：0 元';
         array_push($sub_arr, $total);
+     
         return $sub_arr;
     }
    
+
+    
 
 
 }

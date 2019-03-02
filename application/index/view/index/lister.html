@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<title>我的群聊</title>
+<link rel="stylesheet" type="text/css" href="/static/home/css/chat.css"/>
+<script src="/static/home/js/jquery.min.js"></script>
+<script src="/static/admin/assets/layer/layer.js"></script>
+<script src="/static/admin/assets/js/jquery.form.js"></script>
+</head>
+
+<body>
+<section class="webkit_box">
+  <div class="top_box">
+    <a class="top_back" href="javascript:history.back(-1);">&lt;</a>
+    <div class="top_txt">{$group.groupname}（<span class="person_sum">{$cou}</span>）</div>
+  </div>
+  <section class="webkit_content">
+    <div class="chat_box">
+      <div class="packet_node">
+        <div class="packet_wrap">
+          <div class="packet_get">
+            <p class="packet_time">
+            <a href="{:url('Index/lister',array('more'=>1,'groupid'=>$groupid))}"> 查看更多</a> 
+            </p>
+          </div>
+        </div>
+      </div>
+     {volist name="res" id="v"} 
+     {if condition="$v['type'] eq 0"}
+      {if condition="$v['fromid'] eq $uid"}
+      <div class="chat_cell">
+        <div class="chat_wrap">
+          <p>{$v.fromname}</p>
+          <span class="chat_txt">{$v.content}</span>
+        </div>
+        <img class="chat_thumb" src="{$v.fromavatar}" />
+      </div>
+      {else /}
+      <div class="chat_item">
+        <img class="chat_thumb" src="{$v.fromavatar}" />
+        <div class="chat_wrap">
+            <p>{$v.fromname}</p>
+          <span class="chat_txt">{$v.content}</span>
+        </div>
+      </div>
+      {/if}
+      {elseif condition="$v['red'] eq 0" /}
+      
+      <div class="chat_item">
+        <img class="chat_thumb" src="{$v.fromavatar}" />
+        <div class="chat_wrap">
+            
+          <div class="packet_box" >
+            <div class="packet_top" data-id="{$v['id']}">
+              <img class="packet_icon" src="/static/home/img/hongbao.png" />
+              <div class="packet_txt">
+                <div class="packet_tips">恭喜发财，大吉大利！</div>
+                <div class="packet_status">查看红包</div>
+              </div>
+            </div>
+            <div class="packet_name">即时红包</div>
+          </div>
+        </div>
+      </div>
+       {else /}
+       <div class="chat_item">
+          <img class="chat_thumb" src="{$v.fromavatar}" />
+          <div class="chat_wrap">
+          <a href="{:url('Index/packet',array('id'=>$v['id']))}">
+            <div class="packet_box" onclick="false" >
+              <div class="packet_top get" >
+                <img class="packet_icon" src="/static/home/img/open_hongbao.png" />
+                <div class="packet_txt">
+                  <div class="packet_tips">恭喜发财，大吉大利！</div>
+                  <div class="packet_status">红包已被领取</div>
+                </div>
+              </div>
+              <div class="packet_name">即时红包</div>
+            </div>
+          </a>
+          </div>
+        </div>
+      
+      {/if}
+      {/volist}
+     
+      <!-- <div class="packet_node">
+        <div class="packet_wrap">
+          <div class="packet_get">
+            <img class="packet_pic" src="/static/home/img/hongbao.png" />
+            <p class="packet_who">
+              某某某领取了<span class="packet_color">红包</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="packet_wrap">
+          <div class="packet_get">
+            <img class="packet_pic" src="/static/home/img/hongbao.png" />
+            <p class="packet_who">
+              某某某领取了<span class="packet_color">红包</span>，红包已领完
+            </p>
+          </div>
+        </div>
+      </div> -->
+
+      
+    </div>
+  </section>
+  <div class="chat_enter">
+    <input class="chat_msg" id="chat_msg" type="text" />
+    <button class="chat_post" id="chat_post">发送</button>
+  </div>
+</section>
+
+<!--弹出框-->
+<div class="model_box">
+  <div class="model_show">
+    <img class="model_thumb" src="https://weixin.1919.cn/b2c1919/static/img/memmber.71d04ab.png" />
+    <div class="model_nickname">昵称昵称</div>
+    <p class="model_tips">恭喜发财，大吉大利！</p>
+    <a class="model_open" href="packet.html">開</a>
+  </div>
+  <div class="model_close">X</div>
+</div>
+
+<!--蒙版背景-->
+<div class="common_bg"></div>
+
+<script>
+function deleteHtmlTag(str) {
+  str = str.replace(/<[^>]+>|&[^>]+;/g, "").trim(); //去掉所有的html标签和&nbsp;之类的特殊符合
+  return str;
+}
+
+$(function() {
+  //聊天功能js
+  var chat_txt = $('.chat_txt'),
+    chat_box = $('.chat_box'),
+    chat_msg = $('#chat_msg'),
+    chat_post = $('#chat_post'),
+    char_item = null
+    chat_box.scrollTop(chat_box[0].scrollHeight)
+  chat_post.click(function() {
+    
+    //判断输入内容是否为空
+    if(deleteHtmlTag(chat_msg.val()).trim() === '') {
+      alert('请输入聊天内容')
+      return false
+    } else {
+      var user = {$user};
+      char_item = `<div class="chat_cell"><div class="chat_wrap"><p>${user.nickname}</p><span class="chat_txt">${deleteHtmlTag(chat_msg.val())}</span></div><img class="chat_thumb" src="${user.avatar}" /></div>`
+      chat_box.append(char_item)
+       //保存消息
+       var groupid={$group.id};
+       var content = deleteHtmlTag(chat_msg.val());
+      $.ajax({
+        type:"post",
+        url:"{:url('Index/saveinfo')}",
+        data:{content:content,groupid:groupid},
+        datatype:"text",
+        success:function(re){
+           if(re == 1){
+              //清空输入框
+              chat_msg.val('')
+              //固定视角到最新消息
+              chat_box.scrollTop(chat_box[0].scrollHeight)
+           }else{
+              layer.msg("网络出错了");return ;
+           }
+        } 
+      })
+     
+    
+     
+
+    }
+   
+  })
+   //查询数据库中有没有最新消息
+   function getNewInfo()
+      {
+        $.ajax({
+          type:"get",
+          url:"{:url('Index/getNewsInfo')}",
+          dataType:"json",
+          success:function(re)
+          {
+            var  char_item = null,
+                 result = '';
+            for(var i=0;i<re.length;i++){
+              if(re[i].type == 0){
+                char_item = `<div class="chat_item">
+                        <img class="chat_thumb" src="${re[i].fromavatar}" />
+                        <div class="chat_wrap">
+                            <p>${re[i].fromname}</p>
+                          <span class="chat_txt">${re[i].content}</span>
+                        </div>
+                      </div>`
+              }else{
+                char_item = `<div class="chat_item">
+                          <img class="chat_thumb" src="${re[i].fromavatar}" />
+                          <div class="chat_wrap">
+                             
+                            <div class="packet_box" >
+                              <div class="packet_top" data-id="${re[i].id}">
+                                <img class="packet_icon" src="/static/home/img/hongbao.png" />
+                                <div class="packet_txt">
+                                  <div class="packet_tips">恭喜发财，大吉大利！</div>
+                                  <div class="packet_status">查看红包</div>
+                                </div>
+                              </div>
+                              <div class="packet_name">即时红包</div>
+                            </div>
+                          </div>
+                        </div>`
+              }
+              result += char_item;
+              $('.chat_box').append(result);
+              $('.chat_box').scrollTop(chat_box[0].scrollHeight)
+            }
+
+          }
+        })
+      }
+  setInterval(function(){ 
+        getNewInfo();
+      }, 5000)
+  
+
+  //按回车键触发发送事件
+  chat_msg.keyup(function(event) {
+    //判断键值为回车
+    if(event.keyCode == 13) {
+      chat_post.trigger('click')
+    }
+
+  })
+  
+  //关闭模态窗
+  function modelClose(){
+    $('.common_bg').removeClass('show')
+    $('.model_box').removeClass('show')
+  }
+  
+  //红包功能js
+  var packet_top = $('.packet_top'),
+      common_bg = $('.common_bg'),
+      model_box = $('.model_box'),
+      model_close = $('.model_close')
+  
+  packet_top.click(function(){
+    var _this = $(this);
+    var id = _this.data("id");
+    $.ajax({
+       type:"post",
+       url:"{:url('Index/getinfo')}",
+       data:{id:id},
+       datatype:"text",
+       success:function(re)
+       {
+         if(re == 0){
+           location.reload();
+         }else{
+           var re = JSON.parse(re);
+            $(".model_thumb").attr('src',re.fromavatar);
+            $(".model_nickname").text(re.fromname);
+            $(".model_open").attr('href','__URL__/packets/id/'+re.id)
+            common_bg.addClass('show')
+            model_box.addClass('show')
+         }
+       }
+    })
+    
+    
+    //领取红包之后的样式
+    _this.addClass('get')
+    _this.find('.packet_icon').attr('src','/static/home/img/open_hongbao.png')
+    _this.find('.packet_status').html('红包已被领取')
+    
+  })
+  
+  common_bg.click(function(){
+    modelClose()
+  })
+  model_close.click(function(){
+    modelClose()
+  })
+  
+})
+</script>
+
+</body>
+
+</html>
